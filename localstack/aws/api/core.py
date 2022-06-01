@@ -78,6 +78,9 @@ class RequestContext:
     def service_operation(self) -> ServiceOperation:
         return ServiceOperation(self.service.service_name, self.operation.name)
 
+    def __repr__(self):
+        return f"<RequestContext {self.service=}, {self.operation=}, {self.region=}, {self.account_id=}, {self.request=}, {self.service_request=}>"
+
 
 ServiceRequestHandler = Callable[
     [RequestContext, ServiceRequest], Optional[Union[ServiceResponse, HttpResponse]]
