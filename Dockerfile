@@ -87,17 +87,16 @@ ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
 ADD https://raw.githubusercontent.com/carlossg/docker-maven/master/openjdk-11/settings-docker.xml /usr/share/maven/ref/
 
 # set workdir
-RUN mkdir -p /opt/code/localstack
+RUN mkdir -m 777 -p /opt/code/localstack
 WORKDIR /opt/code/localstack/
 
 # create filesystem hierarchy
-RUN mkdir -p /var/lib/localstack && \
-    mkdir -p /usr/lib/localstack
+RUN mkdir -m 777 -p /var/lib/localstack && \
+    mkdir -m 777 -p /usr/lib/localstack
 # backwards compatibility with LEGACY_DIRECTORIES (TODO: deprecate and remove)
 RUN mkdir -p /opt/code/localstack/localstack && \
     ln -s /usr/lib/localstack /opt/code/localstack/localstack/infra && \
-    mkdir /tmp/localstack && \
-    chmod -R 777 /tmp/localstack && \
+    mkdir -m 777 /tmp/localstack && \
     touch /tmp/localstack/.marker && \
     chmod -R 777 /usr/lib/localstack
 
@@ -213,7 +212,7 @@ LABEL maintainer="LocalStack Team (info@localstack.cloud)"
 LABEL description="LocalStack Docker image"
 
 # Copy the build dependencies
-COPY --from=builder /opt/code/localstack/ /opt/code/localstack/
+COPY --chown=localstack:0 --chmod=777 --from=builder /opt/code/localstack/ /opt/code/localstack/
 
 # Copy in postgresql extensions
 COPY --from=builder /usr/share/postgresql/11/extension /usr/share/postgresql/11/extension
@@ -227,6 +226,7 @@ RUN mkdir -p /.npm && \
     chmod 755 /root && \
     chmod -R 777 /.npm && \
     chmod -R 777 /var/lib/localstack && \
+    chown -R localstack:0 /var/lib/localstack && \
     useradd -ms /bin/bash localstack && \
     ln -s `pwd` /tmp/localstack_install_dir
 
@@ -235,9 +235,9 @@ RUN pip3 install --upgrade awscli awscli-local requests
 
 # Adds the results of `make init` that are explicitly include in .dockerignore to the image.
 # `make init` needs to be executed before building the image, because some package installers need docker themselves.
-ADD .filesystem/usr/lib/localstack /usr/lib/localstack
+ADD --chmod=777 --chown=localstack:0 .filesystem/usr/lib/localstack /usr/lib/localstack
 # Add the code in the last step
-ADD localstack/ localstack/
+ADD --chmod=777 --chown=localstack:0 localstack/ localstack/
 
 # Download some more dependencies (make init needs the LocalStack code)
 # FIXME the init python code should be independent (i.e. not depend on the localstack code), idempotent/reproducible,
